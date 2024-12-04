@@ -207,14 +207,24 @@ variable "bucket_policies" {
     policy_as_json = optional(string, null)
     policy_as_hcl = optional(list(object({
         sid = optional(string, null)
-        principals = list(object({ type = string, identifiers = list(string) }))
-        not_principals = optional(list(object({ type = string, identifiers = list(string) })), null)
+        principals = list(object({
+          type = string
+          identifiers = list(string)
+        }))
+        not_principals = optional(list(object({
+          type = string
+          identifiers = list(string) 
+        })), null)
         effect = optional(string, "Allow")
         actions = optional(list(string), [])
         not_actions = optional(list(string), [])
         resources = optional(list(string), null)
         not_resources = optional(list(string), null)
-        conditions = optional(list(object({ test = string, variable = string, values = list(string) })), [])
+        conditions = optional(list(object({
+          test = string
+          variable = string
+          values = list(string) 
+        })), [])
     })), null)
   }))
   default = []
