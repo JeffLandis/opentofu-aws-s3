@@ -1,18 +1,36 @@
-locals {
-
-}
-
-provider "aws" {
-  # No credentials explicitly set here because they come from either the
-  # environment or the global credentials file.
-
-  region = "ap-southeast-1"
-
-}
-
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
+
+data "aws_iam_policy_document" "bucket_policies" {
+    for_each = { for k,v in local.bucket_policies: k => v  if v.policy_as_hcl != null }
+    dynamic "statement" {
+      for_each = each.value.policy_as_hcl
+      content {
+        sid = statement.value.sid
+        dynamic "principals" {
+            for_each = statement.value.principals
+            content {
+                type = principals.value.type
+                identifiers = principals.value.identifiers
+            }
+        }
+        effect = statement.value.effect
+        actions = statement.value.actions
+        not_actions = statement.value.not_actions
+        resources = statement.value.resources
+        not_resources = statement.value.not_resources
+        dynamic "condition" {
+            for_each = statement.value.conditions
+            content {
+                test = condition.value.test
+                variable = condition.value.variable
+                values = condition.value.values 
+            }
+        }
+      }
+    }
+}
 
 resource "random_string" "bucket_name_suffixes" {
     for_each = toset([ for val in var.buckets: val.prefix if val.prefix != null ])
@@ -59,14 +77,14 @@ resource "aws_s3_bucket_acl" "this" {
                 display_name = access_control_policy.value.owner_display_name
             }
             dynamic "grant" {
-                for_each = [ for val in access_control_policy.value["grant_names"]: var.bucket_acl_grants[val] ] 
+                for_each = [ for val in access_control_policy.value["grant_names"]: local.bucket_acl_grants[val] ] 
                 content {
                     permission = grant.value.permission
                     grantee {
-                        type = var.bucket_acl_grantees[grant.value.grantee_name].type
-                        id = var.bucket_acl_grantees[grant.value.grantee_name].id
-                        email_address = var.bucket_acl_grantees[grant.value.grantee_name].email_address
-                        uri = var.bucket_acl_grantees[grant.value.grantee_name].uri 
+                        type = grant.value.grantee.type
+                        id = grant.value.grantee.id
+                        email_address = grant.value.grantee.email_address
+                        uri = grant.value.grantee.uri 
                     }
                 }
             }
@@ -97,4 +115,14 @@ resource "aws_s3_bucket_versioning" "this" {
         status = each.value.status
         mfa_delete = each.value.status != "Disabled" ? each.value.mfa_delete : null
     }
+}
+
+resource "aws_s3_bucket_policy" "this" {
+    for_each =  { for k,v in local.buckets: k => local.bucket_policies[v.policy_name] if v.policy_name != null }
+    bucket = aws_s3_bucket.this[each.key].id
+    policy = (
+        each.value.policy_as_hcl == null
+        ? templatestring(each.value.policy_as_json, { bucket_arn = aws_s3_bucket.this[each.key].arn })
+        : templatestring(data.aws_iam_policy_document.bucket_policies[each.value.name].json, { bucket_arn = aws_s3_bucket.this[each.key].arn })
+    )
 }
