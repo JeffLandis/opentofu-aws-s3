@@ -264,3 +264,53 @@ variable "tags" {
   default = {}
   description = "Map of tags to assign to all resources in module"
 }
+
+
+######################################################
+# DEFAULTS
+######################################################
+variable "defaults" {
+  type = object({
+    pab_configuration = optional(object({
+      block_public_acls = optional(bool, true)
+      ignore_public_acls = optional(bool, true)
+      block_public_policy = optional(bool, true)
+      restrict_public_buckets = optional(bool, true)
+    }), {})
+    sse_configuration = optional(object({
+      expected_bucket_owner = optional(string, null)
+      bucket_key_enabled = optional(bool, false)
+      sse_algorithm = optional(string, "aws:kms")
+      kms_master_key_id = optional(string, null)
+    }), {})
+    versioning_configuration = optional(object({
+      expected_bucket_owner = optional(string, null)
+      mfa = optional(string, null)
+      status = optional(string, "Disabled")
+      mfa_delete = optional(string, "Disabled")
+    }), {})
+    acl = optional(object({
+      acl = optional(string, "private")
+      expected_bucket_owner = optional(string, null)
+      access_control_policy = optional(object({
+        grant_names = list(string)
+        owner_id = string
+        owner_display_name = optional(string, null)
+      }), null)
+    }), {})
+  })
+  default = {}
+  description = <<-EOT
+A Public Access Block (PAB) configuration named `default` is added to `bucket_pab_configurations` using values defined in `pab_configuration`.
+A Server Side Encryption (SSE) configuration named `default` is added to `bucket_sse_configurations` using value defined in `sse_configuration`.
+A versioning configuration named `default` is added to `bucket_versioning_configurations` using value defined in `versioning_configuration`.
+An Access Control List (ACL) configuration named `default` is added to `bucket_acls` using value defined in `acl`.
+Define a `defaults` variable to override any default values.
+| Attribute Name           | Required? | Default | Description                                                                                      |
+|:-------------------------|:---------:|:-------:|:-------------------------------------------------------------------------------------------------|
+| pab_configuration        | optional  | true    | Default Public Access Block (PAB) configuration. See `bucket_pab_configurations` for details.    |
+| sse_configuration        | optional  | true    | Default Server Side Encryption (SSE) configuration. See `bucket_sse_configurations` for details. |
+| versioning_configuration | optional  | true    | Default versioning configuration. See `bucket_versioning_configurations` for details.            |
+| acl                      | optional  | true    | Default Access Control List (ACL) configuration. See `bucket_acls` for details.                  |
+EOT
+}
