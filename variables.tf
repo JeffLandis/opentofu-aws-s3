@@ -8,11 +8,11 @@ variable "buckets" {
     force_destroy = optional(bool, false)
     object_lock_enabled = optional(bool, false)
     object_ownership = optional(string, "BucketOwnerEnforced")
-    versioning_configuration_name = optional(string, "default")
-    pab_configuration_name = optional(string, "default")
-    acl_name = optional(string, "default")
-    sse_configuration_name = optional(string, "default")
-    policy_name = optional(string, null)
+    versioning_configuration_key = optional(string, "default")
+    pab_configuration_key = optional(string, "default")
+    acl_key = optional(string, "default")
+    sse_configuration_key = optional(string, "default")
+    policy_key = optional(string, null)
     tags = optional(map(string), {})
   }))
   default = []
@@ -39,11 +39,11 @@ List of S3 buckets. At a minimum, 'name' **or** 'prefix' is required, 'name' has
 | force_destroy                          | optional    | false               | Whether all objects should be deleted when bucket is destroyed.                                                       |
 | object_lock_enabled                    | optional    | false               | Whether this bucket has Object Lock configuration enabled. Requires Versioning.                                       |
 | object_ownership                       | optional    | BucketOwnerEnforced | Object ownership rule. (BucketOwnerPreferred, ObjectWriter, BucketOwnerEnforced)                                      |
-| versioning_configuration_name          | optional    | default             | Name of versioning configuration from bucket_versioning_configurations. By default, versioning is disabled.           |
-| pab_configuration_name                 | optional    | default             | Name of public access block configuration from bucket_pab_configurations. By default, all public access is blocked.   |
-| acl_name                               | optional    | default             | Name of acl from bucket_acls. By default, ACL is set to private.                                                      |
-| sse_configuration_name                 | optional    | default             | Name of server side encryption configuration from bucket_sse_configurations. By default, 'aws:kms' with default key.  |
-| policy_name                            | optional    | null                | Name of a policy from bucket_policies.                                                                                |
+| versioning_configuration_key           | optional    | default             | Name of versioning configuration from bucket_versioning_configurations. By default, versioning is disabled.           |
+| pab_configuration_key                  | optional    | default             | Name of public access block configuration from bucket_pab_configurations. By default, all public access is blocked.   |
+| acl_key                                | optional    | default             | Name of acl from bucket_acls. By default, ACL is set to private.                                                      |
+| sse_configuration_key                  | optional    | default             | Name of server side encryption configuration from bucket_sse_configurations. By default, 'aws:kms' with default key.  |
+| policy_key                             | optional    | null                | Name of a policy from bucket_policies.                                                                                |
 | tags                                   | optional    | { }                 | A map of tags to assign to the resource.                                                                              |      
 EOT
 }
@@ -52,20 +52,20 @@ EOT
 # S3 BUCKET PUBLIC ACCESS BLOCK CONFIGURATIONS
 ######################################################
 variable "bucket_pab_configurations" {
-  type = list(object({
-    name = string
+  type = map(object({
     block_public_acls = optional(bool, true)
     ignore_public_acls = optional(bool, true)
     block_public_policy = optional(bool, true)
     restrict_public_buckets = optional(bool, true)
   }))
-  default = []
+  default = {}
   description = <<-EOT
-List of S3 bucket Public Access Block configurations. Configuration named **default** with all public access blocked is added to the map by default.        
+Map of S3 bucket Public Access Block configurations. The map's key is used as `pab_configuration_key` in the `buckets` variable and must be unique to identify each configuration. 
+Configuration named **default** with all public access blocked is added to the map by default.
+
 [Blocking public access](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html)
 | Attribute Name          | Required? | Default | Description                                                                                |
 |:------------------------|:---------:|:-------:|:-------------------------------------------------------------------------------------------|
-| name                    | required  |         | Unique name to identify configuration, used as pab_configuration_name in buckets variable. |
 | block_public_acls       | optional  | true    | Whether public ACLs should be blocked for this bucket.                                     |
 | ignore_public_acls      | optional  | true    | Whether public ACLs should be ignored for this bucket.                                     |
 | block_public_policy     | optional  | true    | Whether public policies should be blocked for this bucket.                                 |
@@ -77,20 +77,20 @@ EOT
 # S3 BUCKET VERSIONING
 ######################################################
 variable "bucket_versioning_configurations" {
-  type = list(object({
-    name = string
+  type = map(object({
     expected_bucket_owner = optional(string, null)
     mfa = optional(string, null)
     status = optional(string, "Disabled")
     mfa_delete = optional(string, "Disabled")
   }))
-  default = []
+  default = {}
   description = <<-EOT
-List of S3 bucket versioning configurations. Configuration named **default** with versioning disabled is added to the map by default.              
+Map of S3 bucket versioning configurations. The map's key is used as `versioning_configuration_key` in the `buckets` variable and must be unique to identify each configuration. 
+Configuration named **default** with versioning disabled is added to the map by default.              
+
 [Versioning on buckets](https://docs.aws.amazon.com/AmazonS3/latest/userguide/manage-versioning-examples.html)
 | Attribute Name           | Required?   | Default  | Description                                                                                                       |
 |:-------------------------|:-----------:|:--------:|:------------------------------------------------------------------------------------------------------------------|  
-| name                     | required    |          | Unique name to identify configuration, used as versioning_configuration_name in buckets variable.                 |
 | expected_bucket_owner    | optional    | null     | Account ID of the expected bucket owner.                                                                          |
 | mfa                      | conditional | null     | Authentication device's serial number, space, and value displayed on device. Required if 'mfa_delete' is enabled. |
 | status                   | optional    | Disabled | Versioning state of the bucket (Enabled, Suspended).                                                              |
@@ -102,20 +102,20 @@ EOT
 # S3 BUCKET SSE CONFIGURATIONS
 ######################################################
 variable "bucket_sse_configurations" {
-  type = list(object({
-    name = string
+  type = map(object({
     expected_bucket_owner = optional(string)
     bucket_key_enabled = optional(bool, false)
     sse_algorithm = optional(string, "aws:kms")
     kms_master_key_id = optional(string)
   }))
-  default = []
+  default = {}
   description = <<-EOT
-List of S3 bucket server side encryption configurations. A configuration named **default** using aws:kms with aws/s3 KMS master key is added to the map by default.        
+Map of S3 bucket Server Side Encryption (SSE) configurations. The map's key is used as `sse_configuration_key` in the `buckets` variable and must be unique to identify each configuration. 
+A configuration named **default** using aws:kms with aws/s3 KMS master key is added to the map by default.
+
 [Server-side encryption](https://docs.aws.amazon.com/AmazonS3/latest/userguide/serv-side-encryption.html)
 | Attribute Name        | Required? | Default | Description                                                                                     |
 |-----------------------|-----------|---------|-------------------------------------------------------------------------------------------------|
-| name                  | required  |         | Unique name to identify configuration, used as sse_configuration_name in buckets variable.      |
 | expected_bucket_owner | optional  | null    | Account ID of the expected bucket owner.                                                        |
 | bucket_key_enabled    | optional  | false   | Whether or not to use Amazon S3 Bucket Keys for SSE-KMS. Defaults to false.                     |
 | sse_algorithm         | optional  | aws:kms | Server side encryption algorithm to use (AES256, aws:kms, aws:kms:dsse).                        |
@@ -127,28 +127,28 @@ EOT
 # S3 BUCKET ACLS
 ######################################################
 variable "bucket_acls" {
-  type = list(object({
-    name = string
-    acl = optional(string)
+  type = map(object({
     expected_bucket_owner = optional(string)
+    acl = optional(string)
     access_control_policy = optional(object({
-      grant_names = list(string)
+      grant_keys = list(string)
       owner_id = string
       owner_display_name = optional(string)
     }))
   }))
-  default = []
+  default = {}
   description = <<-EOT
-List of S3 bucket ACLs. An 'acl' **or** 'access_control_policy' is required.       
-An ACL named **default** using private ACL is added to the map by default.             
+Map of S3 bucket Access Control List (ACL) configurations. The map's key is used as `acl_key` in the `buckets` variable and must be unique to identify each configuration.
+An ACL named **default** using private ACL is added to the map by default.
+An 'acl' **or** 'access_control_policy' is required.
+
 [Access control list (ACL) overview](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html)
 | Attribute Name            | Required?   | Default | Description                                                                                                                                                                       |
 |---------------------------|-------------|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| name                      | required    |         | Unique name to identify the ACL, used as acl_name in buckets variable.                                                                                                            |
 | expected_bucket_owner     | optional    | null    | Account ID of the expected bucket owner.                                                                                                                                          |
 | acl                       | conditional | null    | Canned ACL to apply to the bucket (private, public-read, public-read-write, aws-exec-read, authenticated-read, bucket-owner-read, bucket-owner-full-control, log-delivery-write). |
 | access_control_policy     | conditional | null    | Configuration block for the access control attributes below. Either access_control_policy or acl is required.                                                                     |
-| &ensp; grant_names        | conditional |         | List of grant names from bucket_acl_grants. Required for access_control_policy.                                                                                                   |
+| &ensp; grant_keys         | conditional |         | List of grant keys from bucket_acl_grants. Required for access_control_policy.                                                                                                   |
 | &ensp; owner_id           | conditional |         | ID of the owner. Required for access_control_policy.                                                                                                                              |
 | &ensp; owner_display_name | optional    | null    | Display name of the owner.                                                                                                                                                        |
 EOT
@@ -158,18 +158,16 @@ EOT
 # S3 BUCKET ACL GRANTS
 ######################################################
 variable "bucket_acl_grants" {
-  type = list(object({
-    name = string
-    grantee_name = string
+  type = map(object({
+    grantee_key = string
     permission = optional(string, "READ")
   }))
-  default = []
+  default = {}
   description = <<-EOT
-List of grantees being granted permissions.
+Map of grantees being granted permissions. The map's key is used as `grant_keys` in the `bucket_acls` variable and must be unique to identify each grantee.
 | Attribute Name| Required? | Default | Description                                                                                          |
 |:--------------|:---------:|:-------:|:-----------------------------------------------------------------------------------------------------|
-| name          | required  |         | Unique name to identify the grant, used as grant_names in bucket_acls variable.                      |
-| grantee_name  | required  |         | Name of grantee from bucket_acl_grantees.                                                            |
+| grantee_key   | required  |         | Name of grantee from bucket_acl_grantees.                                                            |
 | permission    | optional  | READ    | Permission to assign to the grantee for the bucket (FULL_CONTROL, WRITE, WRITE_ACP, READ, READ_ACP). |
 EOT
 }
@@ -178,19 +176,18 @@ EOT
 # S3 BUCKET ACL GRANTEES
 ######################################################
 variable "bucket_acl_grantees" {
-  type = list(object({
-    name = string
+  type = map(object({
     type = string
     id = optional(string, null)  
     email_address = optional(string, null)  
     uri = optional(string, null)  
   }))
-  default = []
+  default = {}
   description = <<-EOT
+Map of grantees identified by id, email address, or group uri. The map's key is used as `grantee_key` in the `bucket_acl_grants` variable and must be unique to identify each grantee.
 List of grantees identified by id, email address, or group uri.
 | Attribute Name| Required?   | Default | Description                                                                              |
 |:--------------|:-----------:|:-------:|:-----------------------------------------------------------------------------------------|
-| name          | required    |         | Unique name to identify the grantee, used as grantee_name in bucket_acl_grants variable. |
 | type          | required    |         | Type of grantee (CanonicalUser, AmazonCustomerByEmail, Group).                           |
 | id            | conditional | null    | Canonical user ID of the grantee. Required for CanonicalUser.                            |
 | email_address | conditional | null    | Email address of the grantee. Required for AmazonCustomerByEmail.                        |
@@ -202,8 +199,7 @@ EOT
 # S3 BUCKET POLICIES
 ######################################################
 variable "bucket_policies" {
-  type = list(object({
-    name = string
+  type = map(object({
     policy_as_json = optional(string, null)
     policy_as_hcl = optional(list(object({
         sid = optional(string, null)
@@ -227,13 +223,14 @@ variable "bucket_policies" {
         })), [])
     })), null)
   }))
-  default = []
+  default = {}
   description = <<-EOT
-List of bucket policies. The templatestring function will be used on the policy to replace each occurrence of $${bucket_arn} with the bucket's ARN.        
+Map of S3 bucket policies. The map's key is used as `policy_key` in the `buckets` variable and must be unique to identify each policy.
+The templatestring function will be used on the policy to replace each occurrence of $${bucket_arn} with the bucket's ARN.
+
 [Bucket policies](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-policies.html)
 | Attribute Name           | Required?   | Default | Description                                                                                                                                                                                       |
 |:-------------------------|:-----------:|:-------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| name                     | required    |         | Unique name to identify the policy, used as policy_name in bucket variable.                                                                                                                       |
 | policy_as_json           | conditional | null    | JSON Text of the bucket policy.                                                                                                                                                                   |
 | policy_as_hcl            | conditional | null    | List of IAM policy statements. [aws_iam_policy_document](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document#statement)                            |
 | &ensp; sid               | optional    | null    | Sid (statement ID) is an identifier for a policy statement.                                                                                                                                       |

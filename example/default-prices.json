@@ -1,0 +1,43 @@
+{
+    "M6MTARCQFUQBQ2V3.JRTCKXETXF": {
+        "effectiveDate": "2025-02-01T00:00:00Z",
+        "offerTermCode": "JRTCKXETXF",
+        "priceDimensions": {
+            "M6MTARCQFUQBQ2V3.JRTCKXETXF.D42MF2PVJS": {
+                "appliesTo": [],
+                "beginRange": "51200",
+                "description": "$0.024 per GB - next 450 TB / month of storage used",
+                "endRange": "512000",
+                "pricePerUnit": {
+                    "USD": "0.0240000000"
+                },
+                "rateCode": "M6MTARCQFUQBQ2V3.JRTCKXETXF.D42MF2PVJS",
+                "unit": "GB-Mo"
+            },
+            "M6MTARCQFUQBQ2V3.JRTCKXETXF.PGHJ3S3EYE": {
+                "appliesTo": [],
+                "beginRange": "0",
+                "description": "$0.025 per GB - first 50 TB / month of storage used",
+                "endRange": "51200",
+                "pricePerUnit": {
+                    "USD": "0.0250000000"
+                },
+                "rateCode": "M6MTARCQFUQBQ2V3.JRTCKXETXF.PGHJ3S3EYE",
+                "unit": "GB-Mo"
+            },
+            "M6MTARCQFUQBQ2V3.JRTCKXETXF.PXJDJ3YRG3": {
+                "appliesTo": [],
+                "beginRange": "512000",
+                "description": "$0.023 per GB - storage used / month over 500 TB",
+                "endRange": "Inf",
+                "pricePerUnit": {
+                    "USD": "0.0230000000"
+                },
+                "rateCode": "M6MTARCQFUQBQ2V3.JRTCKXETXF.PXJDJ3YRG3",
+                "unit": "GB-Mo"
+            }
+        },
+        "sku": "M6MTARCQFUQBQ2V3",
+        "termAttributes": {}
+    }
+}

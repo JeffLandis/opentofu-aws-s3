@@ -39,3 +39,17 @@ Map of S3 buckets.
 | bucket_policy             | Bucket Policy.                                                |
 EOT
 }
+
+# output "buckets" {
+#   value = local.buckets
+# }
+
+
+# output "default_configurations" {
+#   value = {
+#     bucket_pab_configurations = local.bucket_pab_configurations
+#     bucket_versioning_configurations = local.bucket_versioning_configurations
+#     bucket_sse_configurations = local.bucket_sse_configurations
+#     bucket_acls = local.bucket_acls
+#   }
+# }

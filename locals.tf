@@ -14,71 +14,50 @@ locals {
             random_string.bucket_name_suffixes[val.prefix].result
           ])
         )
+        pab_config = val.pab_configuration_key != null ? lookup(local.bucket_pab_configurations, val.pab_configuration_key, null) : null
+        sse_config = val.sse_configuration_key != null ? lookup(local.bucket_sse_configurations, val.sse_configuration_key, null) : null
+        versioning_config = val.versioning_configuration_key != null ? lookup(local.bucket_versioning_configurations, val.versioning_configuration_key, null) : null
+        acl = val.acl_key != null ? lookup(local.bucket_acls, val.acl_key, null) : null
+        policy = val.policy_key != null ? lookup(var.bucket_policies, val.policy_key, null) : null
       }
     )
   }
 
   bucket_pab_configurations = merge(
     {
-      default = {
-        name = "default"
-        block_public_acls = true
-        ignore_public_acls = true
-        block_public_policy = true
-        restrict_public_buckets = true
-      }
+      default = var.defaults.pab_configuration
     },
-    { for val in var.bucket_pab_configurations: val.name => val }
+    var.bucket_pab_configurations
   )
 
   bucket_sse_configurations = merge(
     {
-      default = {
-        name = "default"
-        expected_bucket_owner = null
-        bucket_key_enabled = false
-        sse_algorithm = "aws:kms"
-        kms_master_key_id = null
-      }
+      default = var.defaults.sse_configuration
     },
-    { for val in var.bucket_sse_configurations: val.name => val }
+    var.bucket_sse_configurations
   )
 
   bucket_versioning_configurations = merge(
     {
-      default = {
-        name = "default"
-        expected_bucket_owner = null
-        mfa = null
-        status = "Disabled"
-        mfa_delete = "Disabled"
-      }
+      default = var.defaults.versioning_configuration
     },
-    { for val in var.bucket_versioning_configurations: val.name => val }
+    var.bucket_versioning_configurations
   )
 
   bucket_acls = merge(
     {
-      default = {
-        name = "default"
-        access_control_policy = null
-        acl                   = "private"
-        expected_bucket_owner = null
-      }
+      default = var.defaults.acl
     },
-    { for val in var.bucket_acls: val.name => val }
+    var.bucket_acls
   )
 
   bucket_acl_grants = {
-    for grant in var.bucket_acl_grants: grant.name => merge(
-      grant,
+    for k,v in var.bucket_acl_grants: k => merge(
+      v,
       { 
-        for val in var.bucket_acl_grantees: "grantee" => val 
-        if val.name == grant.grantee_name
+        grantee = lookup(var.bucket_acl_grantees, v.grantee_key, null)
       }
     )
   }
-
-  bucket_policies = { for val in var.bucket_policies: val.name => val }
 
 }
